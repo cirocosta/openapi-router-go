@@ -1,0 +1,518 @@
+{
+  "components": {
+    "schemas": {
+      "CreateTodoRequest": {
+        "properties": {
+          "description": {
+            "description": "Detailed description of the todo item",
+            "example": "Need to buy milk, eggs, and bread",
+            "type": "string"
+          },
+          "title": {
+            "description": "Title of the todo item",
+            "example": "Buy groceries",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "type": "object"
+      },
+      "TodoListResponse": {
+        "properties": {
+          "todos": {
+            "items": {
+              "$ref": "#/components/schemas/TodoListResponseTodosItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "todos"
+        ],
+        "type": "object"
+      },
+      "TodoListResponseTodosItem": {
+        "properties": {
+          "completed": {
+            "description": "Whether the todo item is completed",
+            "example": "false",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "description": "Detailed description of the todo item",
+            "example": "Need to buy milk, eggs, and bread",
+            "type": "string"
+          },
+          "id": {
+            "description": "Unique identifier for the todo item",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "type": "string"
+          },
+          "title": {
+            "description": "Title of the todo item",
+            "example": "Buy groceries",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "completed",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "TodoResponse": {
+        "properties": {
+          "todo": {
+            "$ref": "#/components/schemas/TodoResponseTodo"
+          }
+        },
+        "required": [
+          "todo"
+        ],
+        "type": "object"
+      },
+      "TodoResponseTodo": {
+        "properties": {
+          "completed": {
+            "description": "Whether the todo item is completed",
+            "example": "false",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "description": "Detailed description of the todo item",
+            "example": "Need to buy milk, eggs, and bread",
+            "type": "string"
+          },
+          "id": {
+            "description": "Unique identifier for the todo item",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "type": "string"
+          },
+          "title": {
+            "description": "Title of the todo item",
+            "example": "Buy groceries",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "completed",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "UpdateTodoRequest": {
+        "properties": {
+          "completed": {
+            "description": "Whether the todo item is completed",
+            "example": "true",
+            "type": "boolean"
+          },
+          "description": {
+            "description": "Detailed description of the todo item",
+            "example": "Need to buy milk, eggs, and bread",
+            "type": "string"
+          },
+          "title": {
+            "description": "Title of the todo item",
+            "example": "Buy groceries",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "errorSchema": {
+        "properties": {
+          "code": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "A sample API using the custom router wrapper",
+    "title": "Sample Router API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "description": "Home page",
+        "operationId": "get__",
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        },
+        "summary": "Home"
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "API health check endpoint",
+        "operationId": "get__health",
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        },
+        "summary": "Health Check"
+      }
+    },
+    "/todos": {
+      "get": {
+        "description": "Get all todo items",
+        "operationId": "get__todos",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoListResponse"
+                }
+              }
+            },
+            "description": "successful operation"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "application/json": {
+                    "value": "{\"code\": 400, \"message\": \"invalid query parameters\"}"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "application/json": {
+                    "value": "{\"code\": 401, \"message\": \"authentication required\"}"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "List Todos"
+      },
+      "post": {
+        "description": "Create a new todo item",
+        "operationId": "post__todos",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTodoRequest"
+              }
+            }
+          },
+          "description": "request body for Create Todo",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoResponse"
+                }
+              }
+            },
+            "description": "successful operation"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "application/json": {
+                    "value": "{\"code\": 400, \"message\": \"invalid request format\"}"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "application/json": {
+                    "value": "{\"code\": 422, \"message\": \"title is required\"}"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Create Todo"
+      }
+    },
+    "/todos/{id}": {
+      "delete": {
+        "description": "Delete a todo item",
+        "operationId": "delete__todos_{id}",
+        "parameters": [
+          {
+            "description": "id parameter",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        },
+        "summary": "Delete Todo"
+      },
+      "get": {
+        "description": "Get a todo item by ID",
+        "operationId": "get__todos_{id}",
+        "parameters": [
+          {
+            "description": "id parameter",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoResponse"
+                }
+              }
+            },
+            "description": "successful operation"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "application/json": {
+                    "value": "{\"code\": 404, \"message\": \"todo item not found\"}"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        },
+        "summary": "Get Todo"
+      },
+      "put": {
+        "description": "Update a todo item",
+        "operationId": "put__todos_{id}",
+        "parameters": [
+          {
+            "description": "id parameter",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTodoRequest"
+              }
+            }
+          },
+          "description": "request body for Update Todo",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodoResponse"
+                }
+              }
+            },
+            "description": "successful operation"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorSchema"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "summary": "Update Todo"
+      }
+    }
+  }
+}
