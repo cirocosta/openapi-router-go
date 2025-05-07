@@ -17,7 +17,6 @@ import (
 	"github.com/cirocosta/openapi-router-go/internal/api"
 	"github.com/cirocosta/openapi-router-go/internal/repository"
 	"github.com/cirocosta/openapi-router-go/internal/service"
-	"github.com/cirocosta/openapi-router-go/pkg/router"
 )
 
 func main() {
@@ -106,25 +105,18 @@ func runServer() {
 }
 
 func generateOpenAPI() {
-	// define command-line flags
+	// define only the output file flag
 	output := flag.String("o", "openapi.json", "Output file path")
-	title := flag.String("title", "OpenAPI Router Go", "API title")
-	description := flag.String("description", "An API using the OpenAPI router generator", "API description")
-	version := flag.String("version", "1.0.0", "API version")
 	flag.Parse()
 
-	// TODO(cc): this is not amazing, we should be able to arrive at
-	// openapi.json without having to truly instantiate anything...
-	todoRepo := repository.NewInMemoryTodoRepository()
-	todoService := service.NewTodoService(todoRepo)
+	// create mock service
+	mockService := api.NewMockTodoService()
 
-	// create router to get routes
-	r := api.NewRouter(todoService)
+	// create router
+	spec := api.NewRouter(mockService).OpenAPI()
 
-	// create OpenAPI generator
-	generator := router.NewOpenAPIGenerator(*title, *description, *version, r.GetRoutes())
-
-	data, err := json.MarshalIndent(generator.Generate(), "", "  ")
+	// Marshal the spec to JSON
+	data, err := json.MarshalIndent(spec, "", "  ")
 	if err != nil {
 		panic(fmt.Errorf("marshal openapi spec: %w", err))
 	}

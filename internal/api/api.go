@@ -3,11 +3,7 @@ package api
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"net/http"
-	"runtime/debug"
-	"time"
 
 	"github.com/cirocosta/openapi-router-go/internal/model"
 	"github.com/cirocosta/openapi-router-go/pkg/router"
@@ -45,92 +41,35 @@ type API struct {
 
 // NewRouter creates a new router with all routes configured
 func NewRouter(todoService TodoService) *router.DocRouter {
-	// create handler with the provided service
-	todoHandler := NewTodoHandler(todoService)
+	r := router.NewDocRouter("Sample API",
+		"A sample API using the custom router wrapper",
+		"1.0.0",
+	)
 
-	r := router.NewDocRouter()
-
-	// add middleware
+	// Add middlewares
 	r.Use(loggerMiddleware)
 	r.Use(recovererMiddleware)
 
-	// register standard responses with the router
-	api := &API{
-		router:      r,
-		todoHandler: todoHandler,
-	}
+	api := &API{router: r, todoHandler: NewTodoHandler(todoService)}
 
-	// define routes
+	// Define routes
 	api.registerRoutes()
 
 	return r
 }
 
-// loggerMiddleware logs the incoming HTTP request and response
-func loggerMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-
-		// Wrap the response writer to capture the status code
-		ww := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-
-		// Call the next handler
-		next.ServeHTTP(ww, r)
-
-		// Log the request
-		duration := time.Since(start)
-		slog.Info("http request",
-			"method", r.Method,
-			"path", r.URL.Path,
-			"status", ww.statusCode,
-			"duration", duration.String(),
-			"user_agent", r.UserAgent(),
-		)
-	})
-}
-
-// responseWriter is a wrapper around http.ResponseWriter that captures the status code
-type responseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-// WriteHeader captures the status code before writing it
-func (rw *responseWriter) WriteHeader(code int) {
-	rw.statusCode = code
-	rw.ResponseWriter.WriteHeader(code)
-}
-
-// recovererMiddleware recovers from panics and logs the error
-func recovererMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			if err := recover(); err != nil {
-				stack := debug.Stack()
-
-				slog.Error("recovered from panic",
-					"error", fmt.Sprintf("%v", err),
-					"stack", string(stack),
-					"method", r.Method,
-					"path", r.URL.Path,
-				)
-
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(`{"error":"internal server error"}`))
-			}
-		}()
-
-		next.ServeHTTP(w, r)
-	})
-}
-
 // registerRoutes configures all API routes with documentation
 func (api *API) registerRoutes() {
-	// error schema for documentation
+	// Error schema for documentation
 	errSchema := &errorSchema{}
 
-	// home and health routes with declarative API
+	api.router = api.router.WithServer("https://api.hellofresh.com/v1", "Production server").
+		WithServer("https://api-staging.hellofresh.com/v1", "Staging server").
+		WithTag("Todo", "Operations related to todo items").
+		WithTag("Core", "Core API endpoints").
+		WithBearerAuth()
+
+	// Home and health routes with declarative API
 	api.router.Route("GET", "/", homeHandler).
 		WithName("Home").
 		WithDescription("Home page").
@@ -145,7 +84,7 @@ func (api *API) registerRoutes() {
 		WithTags("Core").
 		Register()
 
-	// todo routes with new declarative API
+	// Todo routes with new declarative API
 	api.router.Route("GET", "/todos", api.todoHandler.ListTodos).
 		WithName("List Todos").
 		WithDescription("Get all todo items").
@@ -162,6 +101,7 @@ func (api *API) registerRoutes() {
 			}).
 		WithErrorResponse("500", "Internal Server Error", errSchema).
 		WithTags("Todos").
+		WithSecurity().
 		Register()
 
 	api.router.Route("POST", "/todos", api.todoHandler.CreateTodo).
@@ -181,6 +121,7 @@ func (api *API) registerRoutes() {
 				Value:       `{"code": 422, "message": "title is required"}`,
 			}).
 		WithTags("Todos").
+		WithSecurity().
 		Register()
 
 	api.router.Route("GET", "/todos/{id}", api.todoHandler.GetTodo).
@@ -195,6 +136,7 @@ func (api *API) registerRoutes() {
 				Value:       `{"code": 404, "message": "todo item not found"}`,
 			}).
 		WithTags("Todos").
+		WithSecurity().
 		Register()
 
 	api.router.Route("PUT", "/todos/{id}", api.todoHandler.UpdateTodo).
@@ -207,6 +149,7 @@ func (api *API) registerRoutes() {
 		WithErrorResponse("404", "Not Found", errSchema).
 		WithErrorResponse("422", "Unprocessable Entity", errSchema).
 		WithTags("Todos").
+		WithSecurity().
 		Register()
 
 	api.router.Route("DELETE", "/todos/{id}", api.todoHandler.DeleteTodo).
@@ -216,6 +159,7 @@ func (api *API) registerRoutes() {
 		WithErrorResponse("401", "Unauthorized", errSchema).
 		WithErrorResponse("404", "Not Found", errSchema).
 		WithTags("Todos").
+		WithSecurity().
 		Register()
 }
 

@@ -28,10 +28,11 @@ router.Route("GET", "/users/{id}", getUserHandler).
         },
     ).
     WithTags("Users").
+    WithSecurity().  // Mark route as requiring authentication
     Register()
 
 
-// generate openapi documentation
+// generate openapi documentation with fluent API
 generator := router.NewOpenAPIGenerator(
     "User API",
     "API for managing users",
@@ -39,6 +40,14 @@ generator := router.NewOpenAPIGenerator(
     router.GetRoutes(),
 )
 
+// Configure OpenAPI document with fluent API
+generator.
+    WithServer("https://api.example.com/v1", "Production server").
+    WithServer("https://api-staging.example.com/v1", "Staging server").
+    WithTag("Users", "Operations related to user management").
+    WithBearerAuth()  // Enable JWT Bearer token authentication
+
+// Generate and save the OpenAPI document
 data, _ := json.MarshalIndent(generator.Generate(), "", "  ")
 _ := os.WriteFile("openapi.json", data, 0644)
 ```
